@@ -22,11 +22,30 @@
 
 import UIKit
 
+/// Heyyy... I'm so global
 let movieUrl = "https://itunes.apple.com/us/rss/topmovies/limit=50/json"
 
 class MovieService {
   
   func loadMoviesWith(limit: Double, onComplete complete: @escaping ([Movie]) -> ()) {
+    guard let url = URL(string: movieUrl) else {
+        print("Invalid url format: \(movieUrl)")
+        return
+    }
+    
+    URLSession.shared.dataTask(with: url) { [weak self] (data, _, _) in
+        guard let data = data,
+            let jsonString = String(data: data, encoding: .utf8) else {
+            print("Error while parsing the response data.")
+            return
+        }
+        
+        guard let movies = self?.parse(response: jsonString, withLimit: limit) else {
+            return
+        }
+        complete(movies)
+        return
+    }.resume()
   }
   
   func parse(response: String, withLimit limit: Double) -> [Movie] {
