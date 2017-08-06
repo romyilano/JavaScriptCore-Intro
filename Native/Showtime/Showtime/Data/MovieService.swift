@@ -21,13 +21,31 @@
  */
 
 import UIKit
+import JavaScriptCore // for webkit stuff too
 
 /// Heyyy... I'm so global
 let movieUrl = "https://itunes.apple.com/us/rss/topmovies/limit=50/json"
 
 class MovieService {
     
-    
+    // lazy loaded JS Context - cool this is where they load the javascript file from the bundle
+    lazy var context: JSContext? = {
+        let context = JSContext()
+        
+        guard let commonJSPath = Bundle.main.path(forResource: "common", ofType: "js") else {
+            print("Unable to read resource files.")
+            return nil
+        }
+        
+        // Turn it into a script and then evaluate it. magick!
+        do {
+            let common = try String(contentsOfFile: commonJSPath, encoding: String.Encoding.utf8)
+            _ = context?.evaluateScript(common)
+        } catch (let error) {
+            print("Error while processing script file: \(error)")
+        }
+        return context
+    }()
     
     func loadMoviesWith(limit: Double, onComplete complete: @escaping ([Movie]) -> ()) {
         guard let url = URL(string: movieUrl) else {
