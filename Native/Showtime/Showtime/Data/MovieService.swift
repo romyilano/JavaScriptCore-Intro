@@ -68,7 +68,31 @@ class MovieService {
             }.resume()
     }
     
+    /// Nice! works as a buddy with jscontext - all the javascript engineer code can be done for this massively routine json work
+    ///  still unclear how easy it is to debug this stuff though. Could potentially be a total nightmare, since javascript debugging tools are the worst on the earth. although there are open source debuggers online.
+    /// Doesn't look like it's difficult to add strict error handling for swift so far
+    /// - Parameters:
+    ///   - response:
+    ///   - limit: <#limit description#>
+    /// - Returns: <#return value description#>
     func parse(response: String, withLimit limit: Double) -> [Movie] {
+        guard let context = context else {
+            print("JSContext not found.")
+            return []
+        }
+        
+        // context provides the parseJsonmethod -this thing is wrapped in a JSValue obj
+        let parseFunction = context.objectForKeyedSubscript("parseJson")
+        // here's where you put in the arguments for the javascript parseJson function. nice!
+        guard let parsed = parseFunction?.call(withArguments: [response]).toArray() else {
+            print("Unable to parse JSON")
+            return []
+        }
+        
+        let filterFunction = context.objectForKeyedSubscript("filterByLimit")
+        // Filtered is a jSValue... that lives in the JSContext. cool!
+        let filtered = filterFunction?.call(withArguments: [parsed, limit]).toArray()
+        
         return []
     }
 }
